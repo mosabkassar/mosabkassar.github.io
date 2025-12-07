@@ -1,1 +1,16 @@
-hier ist die Datai
+    html_content = f"""
+    <!DOCTYPE html>
+    <html lang="ar">
+    <head>
+      <meta charset="UTF-8">
+      <title>دعوة</title>
+      <style>
+        body {{ font-family: Tahoma; text-align: center; margin-top: 50px; }}
+        h1 {{ color: darkblue; }}
+      </style>
+    </head>
+    <body>
+      <h1>أهلا وسهلا يا {name}</h1>
+      <p>نتمنى لك حفلة ممتعة 🎉</p>
+    </body>
+    </html>
