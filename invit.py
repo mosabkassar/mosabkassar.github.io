@@ -9,9 +9,18 @@ from bidi.algorithm import get_display
 os.makedirs("pages", exist_ok=True)
 os.makedirs("qrcards", exist_ok=True)
 
-# --------- إعدادات التصميم ---------
-BORDER_COLOR = (100,100,100)
-BORDER_WIDTH = 4
+# --------- إعدادات المستطيل السفلي ---------
+BOTTOM_BOX_HEIGHT = 150
+BOTTOM_BOX_COLOR = (255, 255, 255)
+TEXT_COLOR = (0, 0, 0)
+
+# --------- إعدادات الإطار ---------
+BORDER_COLOR = (100, 100, 100)
+BORDER_WIDTH = 8
+
+# --------- الخطوط ---------
+font_title = ImageFont.truetype("Amiri-BoldItalic copy.ttf", 45)
+font_small = ImageFont.truetype("ScheherazadeNew-Bold.ttf", 22)
 
 # --------- دالة إصلاح العربية ---------
 def fix_arabic(text):
@@ -26,14 +35,11 @@ def safe_filename(text):
     return text
 
 # --------- قراءة ملف الإكسل ---------
-df = pd.read_excel("invites_2.xlsx")  # Name | Table | Guests
+df = pd.read_excel("invites_2.xlsx")
 
-# --------- تحميل الخلفية ---------
-background = Image.open("log_2.jpg").convert("RGB")
-background = background.resize((450, 500))
-
-# --------- تحميل الخط ---------
-font_title = ImageFont.truetype("ScheherazadeNew-Bold.ttf", 25)
+# --------- تحميل الخلفية (بدون تغيير الحجم) ---------
+background = Image.open("logo_3.jpg").convert("RGB")
+bg_width, bg_height = background.size
 
 # ======================================================
 #                   تنفيذ السكربت
@@ -42,68 +48,84 @@ font_title = ImageFont.truetype("ScheherazadeNew-Bold.ttf", 25)
 for index, row in df.iterrows():
     serial = index + 1
     name = str(row['Name']).strip()
-    table = row['Table']
-    guests = row['Guests']
+    table = row['Guests']
+    guests = row['Table']
 
     # --------- رابط الصفحة ---------
     page_link = f"https://mosabkassar.github.io/pages/{serial}.html"
-    video_file = "video.mp4"  # ضع الفيديو داخل مجلد pages/assets/
 
     # --------- إنشاء صفحة HTML ---------
     html_content = f"""
     <!DOCTYPE html>
     <html lang="ar" dir="rtl">
-    <head>
-    <meta charset="UTF-8">
-    <title>دعوة {name}</title>
-    <style>
-      body {{ font-family: Arial, sans-serif; text-align: center; margin: 50px; background-color: #f9f9f9; }}
-      h1 {{ color: #333; }}
-      video {{ width: 80%; max-width: 600px; border: 3px solid #ccc; border-radius: 10px; }}
-    </style>
-    </head>
-    <body>
-    <h1>مرحباً {name}</h1>
-    <p>رقم الطاولة: {table} | عدد الأشخاص: {guests}</p>
-    <video controls>
-      <source src="{video_file}" type="video/mp4">
-      متصفحك لا يدعم عرض الفيديو.
-    </video>
+    <head><meta charset="UTF-8"></head>
+    <body style="text-align:center;">
+      <h1>مرحباً {name}</h1>
+      <p>رقم الطاولة: {table} | عدد الأشخاص: {guests}</p>
     </body>
     </html>
     """
     with open(f"pages/{serial}.html", "w", encoding="utf-8") as f:
         f.write(html_content)
 
-    # --------- QR البيانات ---------
-    qr_data = f"""الاسم: {name}
-رقم الطاولة: {table}
-عدد الأشخاص: {guests}"""
-    qr_info = qrcode.make(qr_data).resize((65, 65))
+    # --------- إنشاء QR (بدون تكبير) ---------
+    qr_info = qrcode.make(
+        f"الاسم: {name}\nرقم الطاولة: {table}\nعدد الأشخاص: {guests}"
+    ).convert("RGB")
 
-    # --------- QR الرابط ---------
-    qr_link = qrcode.make(page_link).resize((65, 65))
+    qr_link = qrcode.make(page_link).convert("RGB")
 
-    # --------- إنشاء البطاقة ---------
-    card = background.copy()
+    qr_size = 140
+    qr_info = qr_info.resize((qr_size, qr_size), Image.NEAREST)
+    qr_link = qr_link.resize((qr_size, qr_size), Image.NEAREST)
+
+    # --------- إنشاء كارد جديد بالحجم الأصلي ---------
+    card_width = bg_width
+    card_height = bg_height + BOTTOM_BOX_HEIGHT
+
+    card = Image.new("RGB", (card_width, card_height), (255, 255, 255))
+    card.paste(background, (0, 0))
     draw = ImageDraw.Draw(card)
 
-    # --------- النص ---------
-    y_center = card.height // 2 + 210
-    line1 = fix_arabic(name)
-    draw.rectangle([2, 2, card.width - 2, card.height - 2], outline=BORDER_COLOR, width=BORDER_WIDTH)
-    draw.text((card.width // 2, y_center), line1, font=font_title, fill="black", anchor="mm")
+    # --------- المستطيل السفلي ---------
+    box_top = bg_height
+    draw.rectangle(
+        [0, box_top, card_width, card_height],
+        fill=BOTTOM_BOX_COLOR
+    )
 
-    # --------- أماكن QR ---------
-    margin = 6
-    y_qr = card.height - qr_info.height - margin
-    card.paste(qr_info, (margin, y_qr))
-    card.paste(qr_link, (card.width - qr_link.width - margin, y_qr))
+    # --------- الاسم (داخل الصورة الأصلية) ---------
+    draw.text(
+        (card_width // 2, box_top + BOTTOM_BOX_HEIGHT // 2),
+        fix_arabic(name),
+        font=font_title,
+        fill="black",
+        anchor="mm"
+    )
 
-    # --------- حفظ البطاقة ---------
+
+
+    # --------- QR داخل المستطيل ---------
+    margin = 25
+    qr_y = box_top + (BOTTOM_BOX_HEIGHT - qr_size) // 2
+
+    card.paste(qr_info, (margin, qr_y))
+    card.paste(qr_link, (card_width - qr_size - margin, qr_y))
+
+    # --------- الإطار الخارجي ---------
+    draw.rectangle(
+        [2, 2, card_width - 2, card_height - 2],
+        outline=BORDER_COLOR,
+        width=BORDER_WIDTH
+    )
+
+    # --------- حفظ البطاقة بدقة عالية ---------
     safe_name = safe_filename(name)
-    card.save(f"qrcards/{serial}_{safe_name}.png")
+    card.save(
+        f"qrcards/{serial}_{safe_name}.png",
+        dpi=(300, 300)
+    )
 
     print(f"{serial} → {name}")
 
-print("\n🎉 تم إنشاء دعوات رسمية مع QR في الزوايا بنجاح!")
+print("\n🎉 تم إنشاء البطاقات مع الحفاظ الكامل على الدقة!")
