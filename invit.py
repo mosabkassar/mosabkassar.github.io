@@ -48,8 +48,8 @@ bg_width, bg_height = background.size
 for index, row in df.iterrows():
     serial = index + 1
     name = str(row['Name']).strip()
-    table = row['Guests']
     guests = row['Table']
+    table = row['Guests']
 
     # --------- رابط الصفحة ---------
     page_link = f"https://mosabkassar.github.io/pages/{serial}.html"
@@ -80,10 +80,11 @@ for index, row in df.iterrows():
     </body>
     </html>
     """
-
+    with open(f"pages/{serial}.html", "w", encoding="utf-8") as f:
+        f.write(html_content)
     # --------- إنشاء QR (بدون تكبير) ---------
     qr_info = qrcode.make(
-        f"الاسم: {name}\nرقم الطاولة: {table}\nعدد الأشخاص: {guests}"
+        f"الاسم: {name}\nرقم الطاولة: {table}\nعدد الأشخاص: {guests}\n المؤشر : {index} "
     ).convert("RGB")
 
     qr_link = qrcode.make(page_link).convert("RGB")
