@@ -59,7 +59,7 @@ for index, row in df.iterrows():
     draw = ImageDraw.Draw(card)
 
     # --------- رابط الصفحة ---------
-    page_link = f"https://mosabkassar.github.io/{serial}.html"
+    page_link = f"https://mosabkassar.github.io/pages/{serial}.html"
 
 # رابط الفيديو (يمكن أن يكون ملف mp4 محلي أو رابط خارجي)
     video_file = "video.mp4"  # أو رابط يوتيوب أو رابط مباشر للفيديو
