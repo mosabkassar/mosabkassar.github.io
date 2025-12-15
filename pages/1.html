@@ -133,6 +133,17 @@ video{
   margin-top:25px;
 }
 
+/* Canvas for Snow */
+#snowCanvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none; /* حتى لا يمنع الضغط على الأزرار */
+  z-index: 1; /* خلف المحتوى لكن فوق الخلفية */
+}
+
 /* Footer */
 footer{
   text-align:center;
@@ -165,11 +176,7 @@ footer .names{
   border-radius:25px;
   box-shadow:0 20px 45px rgba(0,0,0,.15);
 }
-
 </style>
-
-
-
 
 <script>
 function toggleHallInfo(){
@@ -182,6 +189,7 @@ function toggleHallInfo(){
 <body>
 <div class="bg-circle bg1"></div>
 <div class="bg-circle bg2"></div>
+<canvas id="snowCanvas"></canvas> <!-- هنا الثلج -->
 
 <div class="container">
 
@@ -189,7 +197,6 @@ function toggleHallInfo(){
   <div class="hero">
     <img src="pic_1.jpg" alt="Invitation Image">
   </div>
-
 
   <div class="header">
     <div class="subtitle">Join us to celebrate our union</div>
@@ -224,8 +231,9 @@ function toggleHallInfo(){
       متصفحك لا يدعم الفيديو
     </video>
   </div>
+
   <audio id="bgMusic" loop>
-  <source src="song.mp3" type="audio/mpeg">
+    <source src="song.mp3" type="audio/mpeg">
   </audio>
 
   <footer>
@@ -234,5 +242,64 @@ function toggleHallInfo(){
   </footer>
 
 </div>
+
+<!-- سكربت الثلج يوضع هنا -->
+<script>
+window.addEventListener("DOMContentLoaded", () => {
+  const canvas = document.getElementById("snowCanvas");
+  const ctx = canvas.getContext("2d");
+
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+
+  let flakes = [];
+
+  function createFlakes() {
+    const x = Math.random() * canvas.width;
+    const y = Math.random() * canvas.height;
+    const radius = Math.random() * 3 + 2;
+    const speed = Math.random() + 0.5;
+    flakes.push({x, y, radius, speed});
+  }
+
+  function drawFlakes() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = "white";
+    ctx.beginPath();
+    for (let flake of flakes) {
+      ctx.moveTo(flake.x, flake.y);
+      ctx.arc(flake.x, flake.y, flake.radius, 0, Math.PI * 2);
+    }
+    ctx.fill();
+    updateFlakes();
+  }
+
+  function updateFlakes() {
+    for (let flake of flakes) {
+      flake.y += flake.speed;
+      if (flake.y > canvas.height) {
+        flake.y = -flake.radius;
+        flake.x = Math.random() * canvas.width;
+      }
+    }
+  }
+
+  function snow() {
+    drawFlakes();
+    requestAnimationFrame(snow);
+  }
+
+  for (let i = 0; i < 150; i++) {
+    createFlakes();
+  }
+
+  snow();
+
+  window.addEventListener("resize", () => {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  });
+});
+</script>
 </body>
 </html>
